@@ -1,0 +1,37 @@
+{
+  "name": "kbtg-backend-playwright-tests",
+  "version": "1.0.0",
+  "description": "Playwright MCP tests for KBTG Flask Backend API",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:api": "playwright test --grep '@api'",
+    "test:auth": "playwright test --grep '@auth'",
+    "test:smoke": "playwright test --grep '@smoke'",
+    "test:report": "playwright show-report",
+    "install:browsers": "playwright install",
+    "install:deps": "playwright install-deps"
+  },
+  "keywords": [
+    "playwright",
+    "testing",
+    "api",
+    "flask",
+    "mcp",
+    "automation"
+  ],
+  "author": "KBTG AI Workshop",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^22.5.0",
+    "playwright": "^1.55.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}
