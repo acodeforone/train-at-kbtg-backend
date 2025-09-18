@@ -18,6 +18,7 @@
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
 - [Development](#development)
+- [Technical Details](#technical-details)
 - [Contributing](#contributing)
 
 ## 🎯 Overview
@@ -514,9 +515,12 @@ backend/train-at-kbtg-backend/
 ├── 🧰 requirements-dev.txt   # Development dependencies
 ├── 🚀 requirements-prod.txt  # Minimal production dependencies
 ├── 🧪 test_app.py           # Unit tests
-├── 🔧 .env                  # Environment variables
+├── � swagger.yaml          # OpenAPI/Swagger specification
+├── 🧪 test_swagger.py       # Swagger integration tests
+├── �🔧 .env                  # Environment variables
 ├── 🏃 run.sh                # Setup and run script
 ├── 📚 README.md             # This documentation
+├── 📊 DETAILS.md            # Technical details with UML diagrams
 ├── 📊 DATABASE_SCHEMA.md    # Database schema documentation
 ├── 🙈 .gitignore            # Git ignore rules
 ├── 🛠️ Makefile              # Development automation
@@ -565,7 +569,18 @@ git commit -m "Add new endpoint for XYZ"
 git push origin feature/new-endpoint
 ```
 
-## 🚀 Deployment
+## � Technical Details
+
+For comprehensive technical documentation including database schema, UML diagrams, and system architecture, see:
+
+**[📋 DETAILS.md](./DETAILS.md)** - Complete technical specification with:
+- 🗄️ **Entity Relationship Diagram** - Database schema visualization
+- 📐 **Class Diagram (Mermaid)** - System class structure and relationships
+- 🔄 **Sequence Diagrams (PlantUML)** - Authentication and session flows
+- 🏗️ **System Architecture** - High-level component architecture
+- 🌊 **Data Flow Diagrams** - Request processing and authentication flows
+
+## �🚀 Deployment
 
 ### Using Docker
 ```bash
@@ -661,6 +676,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Flask-SQLAlchemy Guide](https://flask-sqlalchemy.palletsprojects.com/)
 - [Python Testing with unittest](https://docs.python.org/3/library/unittest.html)
 - [PEP 8 Style Guide](https://pep8.org/)
+
+### UML & Documentation
+- [Mermaid Documentation](https://mermaid.js.org/)
+- [PlantUML Documentation](https://plantuml.com/)
+- [UML Class Diagrams](https://www.uml-diagrams.org/class-diagrams.html)
+- [Entity Relationship Diagrams](https://www.lucidchart.com/pages/er-diagrams)
 
 ### REST API Design
 - [RESTful API Design](https://restfulapi.net/)
