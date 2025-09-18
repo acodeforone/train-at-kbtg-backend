@@ -27,15 +27,26 @@ This is a simple Flask-based RESTful API that demonstrates basic REST API concep
 ### 🌟 Key Learning Objectives
 - Understanding RESTful API principles
 - Flask web framework basics
-- API endpoint design
-- JSON response handling
+- API endpoint design and HTTP methods
+- JSON response handling and validation
+- User authentication and authorization
+- Password hashing and security best practices
+- Session management with UUID tokens
+- SQLite database integration with SQLAlchemy
 - Environment-based configuration
-- Unit testing for APIs
+- Unit testing for APIs with database interactions
+- Error handling and status codes
+- Security headers and CORS handling
 
 ## ✨ Features
 
 - 🔗 **RESTful Endpoints**: Clean, well-defined API routes
 - 🏥 **Health Check**: Built-in health monitoring endpoint
+- 👤 **User Authentication**: Complete registration and login system
+- 🔐 **Session Management**: UUID-based session handling with expiration
+- 💾 **SQLite Database**: Lightweight database with proper schema
+- 🔒 **Password Security**: Bcrypt password hashing with salt
+- 📚 **API Documentation**: Interactive Swagger UI with OpenAPI 3.0 spec
 - 🧪 **Unit Testing**: Comprehensive test coverage
 - ⚙️ **Environment Config**: Flexible configuration management
 - 📝 **Documentation**: Well-documented code and API
@@ -102,6 +113,20 @@ python app.py
 
 🎉 **Success!** Your API is now running at `http://localhost:5000`
 
+### 📚 Access API Documentation
+
+Once the server is running, you can access the interactive API documentation:
+
+- **Swagger UI**: [http://localhost:5000/swagger/](http://localhost:5000/swagger/)
+- **API Docs**: [http://localhost:5000/api/docs](http://localhost:5000/api/docs) (redirects to Swagger UI)
+- **OpenAPI JSON Spec**: [http://localhost:5000/apispec_1.json](http://localhost:5000/apispec_1.json)
+
+The Swagger UI provides an interactive interface where you can:
+- Explore all available endpoints
+- View request/response schemas
+- Test API endpoints directly in the browser
+- Download the OpenAPI specification
+
 ## 🚀 Usage
 
 ### Quick Start
@@ -126,6 +151,17 @@ For convenience, you can use the provided run script:
 http://localhost:5000
 ```
 
+### Interactive API Documentation
+
+🚀 **Recommended**: Use the interactive Swagger UI for exploring and testing the API:
+- **Swagger UI**: [http://localhost:5000/swagger/](http://localhost:5000/swagger/)
+
+The Swagger interface provides:
+- Complete API documentation with examples
+- Interactive "Try it out" functionality
+- Request/response schema validation
+- Authentication testing with session management
+
 ### Endpoints
 
 #### 🌍 Hello World Endpoint
@@ -148,6 +184,170 @@ GET /v1/helloworld
 **Example**:
 ```bash
 curl -X GET http://localhost:5000/v1/helloworld
+```
+
+#### 📝 User Registration Endpoint
+```http
+POST /v1/register
+```
+
+**Description**: Register a new user with the system.
+
+**Request Body**:
+```json
+{
+  "firstname": "John",
+  "lastname": "Doe",
+  "title": "Mr.",
+  "username": "johndoe",
+  "password": "securepassword123"
+}
+```
+
+**Response** (Success):
+```json
+{
+  "message": "User registered successfully",
+  "user": {
+    "id": 1,
+    "firstname": "John",
+    "lastname": "Doe",
+    "title": "Mr.",
+    "username": "johndoe",
+    "created_at": "2025-09-18T07:15:57.031652",
+    "updated_at": "2025-09-18T07:15:57.031659"
+  }
+}
+```
+
+**Status Codes**:
+- `201 Created` - User registered successfully
+- `400 Bad Request` - Validation failed
+- `409 Conflict` - Username already exists
+
+**Example**:
+```bash
+curl -X POST http://localhost:5000/v1/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstname": "John",
+    "lastname": "Doe",
+    "title": "Mr.",
+    "username": "johndoe",
+    "password": "securepassword123"
+  }'
+```
+
+#### 🔐 User Login Endpoint
+```http
+POST /v1/login
+```
+
+**Description**: Authenticate user and create session.
+
+**Request Body**:
+```json
+{
+  "username": "johndoe",
+  "password": "securepassword123"
+}
+```
+
+**Response** (Success):
+```json
+{
+  "message": "Login successful",
+  "user": {
+    "id": 1,
+    "firstname": "John",
+    "lastname": "Doe",
+    "title": "Mr.",
+    "username": "johndoe"
+  },
+  "redirect_url": "http://localhost:3000/dashboard"
+}
+```
+
+**Response Headers**:
+- `sessionid`: UUID session identifier for subsequent requests
+
+**Status Codes**:
+- `200 OK` - Login successful
+- `400 Bad Request` - Missing credentials
+- `401 Unauthorized` - Invalid credentials
+
+**Example**:
+```bash
+curl -X POST http://localhost:5000/v1/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "johndoe",
+    "password": "securepassword123"
+  }' -i
+```
+
+#### ✅ Session Validation Endpoint
+```http
+GET /v1/validate-session
+```
+
+**Description**: Validate current user session.
+
+**Request Headers**:
+- `sessionid`: Session UUID from login
+
+**Response**:
+```json
+{
+  "message": "Session is valid",
+  "user": {
+    "id": 1,
+    "firstname": "John",
+    "lastname": "Doe",
+    "title": "Mr.",
+    "username": "johndoe"
+  },
+  "session_id": "550e8400-e29b-41d4-a716-446655440000"
+}
+```
+
+**Status Codes**:
+- `200 OK` - Session is valid
+- `400 Bad Request` - Missing sessionid header
+- `401 Unauthorized` - Invalid or expired session
+
+**Example**:
+```bash
+curl -X GET http://localhost:5000/v1/validate-session \
+  -H "sessionid: your-session-id-here"
+```
+
+#### 🚪 User Logout Endpoint
+```http
+POST /v1/logout
+```
+
+**Description**: Invalidate user session.
+
+**Request Headers**:
+- `sessionid`: Session UUID to invalidate
+
+**Response**:
+```json
+{
+  "message": "Logout successful"
+}
+```
+
+**Status Codes**:
+- `200 OK` - Logout successful
+- `400 Bad Request` - Missing sessionid header
+- `404 Not Found` - Session not found
+
+**Example**:
+```bash
+curl -X POST http://localhost:5000/v1/logout \
+  -H "sessionid: your-session-id-here"
 ```
 
 #### 🏥 Health Check Endpoint
@@ -181,6 +381,23 @@ For non-existent endpoints:
 }
 ```
 
+### Authentication Flow
+
+1. **Registration**: User creates account with `/v1/register`
+2. **Login**: User authenticates with `/v1/login` and receives `sessionid` header
+3. **Authenticated Requests**: Include `sessionid` header in subsequent requests
+4. **Session Validation**: Use `/v1/validate-session` to check session status
+5. **Logout**: Invalidate session with `/v1/logout`
+
+### Security Features
+
+- **Password Hashing**: Uses bcrypt with automatic salt generation
+- **Session Management**: UUID-based tokens with 24-hour expiration
+- **Input Validation**: Comprehensive validation for all endpoints
+- **SQL Injection Prevention**: Uses SQLAlchemy ORM with parameterized queries
+- **CORS Support**: Configurable cross-origin resource sharing
+- **Error Handling**: Secure error messages without sensitive data exposure
+
 ## 🧪 Testing
 
 ### Running Tests
@@ -193,6 +410,9 @@ python -m unittest test_app.py -v
 
 # Run specific test
 python -m unittest test_app.TestHelloWorldAPI.test_hello_world_endpoint
+
+# Test Swagger integration
+python test_swagger.py
 
 # Using pytest (if installed with dev dependencies)
 pytest
@@ -224,8 +444,17 @@ make clean
 The test suite covers:
 - ✅ Hello World endpoint functionality
 - ✅ Health check endpoint
+- ✅ User registration with validation
+- ✅ User login and authentication
+- ✅ Session management and validation
+- ✅ User logout functionality
+- ✅ Password hashing and verification
+- ✅ Database operations (CRUD)
 - ✅ Error handling for non-existent routes
+- ✅ Input validation and sanitization
 - ✅ JSON response format validation
+- ✅ Duplicate username prevention
+- ✅ Session expiration handling
 
 ## ⚙️ Configuration
 
@@ -234,17 +463,44 @@ The test suite covers:
 Create a `.env` file in the project root with the following variables:
 
 ```env
+# Flask Configuration
 FLASK_APP=app.py
 FLASK_ENV=development
 FLASK_DEBUG=1
 FLASK_HOST=0.0.0.0
 FLASK_PORT=5000
+
+# Database Configuration
+DATABASE_URL=sqlite:///app.db
+DEV_DATABASE_URL=sqlite:///dev_app.db
+
+# Security Configuration
+SECRET_KEY=your-secret-key-change-in-production
+
+# Authentication Configuration
+LOGIN_REDIRECT_URL=http://localhost:3000/dashboard
+SESSION_EXPIRE_HOURS=24
 ```
 
 ### Configuration Classes
 
-- **DevelopmentConfig**: Debug mode enabled, detailed error messages
-- **ProductionConfig**: Debug mode disabled, optimized for production
+- **DevelopmentConfig**: Debug mode enabled, detailed error messages, separate dev database
+- **ProductionConfig**: Debug mode disabled, optimized for production, requires SECRET_KEY
+- **TestingConfig**: In-memory database for testing, testing mode enabled
+
+### Database Configuration
+
+The application uses SQLite by default with the following setup:
+- **Development**: `dev_app.db` file in project root
+- **Production**: `app.db` file in project root  
+- **Testing**: In-memory SQLite database
+
+You can override the database URL using environment variables:
+```bash
+export DATABASE_URL="sqlite:///custom_path.db"
+# or for PostgreSQL in production:
+export DATABASE_URL="postgresql://user:password@localhost/dbname"
+```
 
 ## 📁 Project Structure
 
@@ -252,17 +508,21 @@ FLASK_PORT=5000
 backend/train-at-kbtg-backend/
 ├── 📄 app.py                 # Main Flask application
 ├── ⚙️ config.py              # Configuration management
-├── 📦 requirements.txt       # Production dependencies
+├── �️ models.py              # SQLAlchemy database models
+├── 🔐 auth_utils.py          # Authentication utilities
+├── �📦 requirements.txt       # Production dependencies
 ├── 🧰 requirements-dev.txt   # Development dependencies
 ├── 🚀 requirements-prod.txt  # Minimal production dependencies
 ├── 🧪 test_app.py           # Unit tests
 ├── 🔧 .env                  # Environment variables
 ├── 🏃 run.sh                # Setup and run script
 ├── 📚 README.md             # This documentation
+├── 📊 DATABASE_SCHEMA.md    # Database schema documentation
 ├── 🙈 .gitignore            # Git ignore rules
 ├── 🛠️ Makefile              # Development automation
 ├── 📋 pyproject.toml        # Tool configuration
 ├── 🐳 Dockerfile            # Container configuration
+├── 💾 *.db                  # SQLite database files
 └── 📁 venv/                 # Virtual environment (auto-generated)
 ```
 
@@ -338,7 +598,49 @@ FLASK_ENV=production
 FLASK_DEBUG=0
 FLASK_HOST=0.0.0.0
 FLASK_PORT=5000
+SECRET_KEY=your-super-secret-production-key
+DATABASE_URL=postgresql://user:pass@localhost/prod_db
+LOGIN_REDIRECT_URL=https://your-frontend.com/dashboard
 ```
+
+### Performance Monitoring
+
+**Database Performance:**
+```bash
+# Monitor SQLite database size
+du -h *.db
+
+# Check database integrity
+sqlite3 app.db "PRAGMA integrity_check;"
+
+# Optimize database
+sqlite3 app.db "VACUUM;"
+```
+
+**API Performance Testing:**
+```bash
+# Test registration endpoint
+ab -n 100 -c 10 -H "Content-Type: application/json" \
+  -p registration_payload.json http://localhost:5000/v1/register
+
+# Test login endpoint  
+ab -n 100 -c 10 -H "Content-Type: application/json" \
+  -p login_payload.json http://localhost:5000/v1/login
+```
+
+### Security Considerations
+
+**Production Checklist:**
+- [ ] Change default `SECRET_KEY`
+- [ ] Use HTTPS in production
+- [ ] Set secure session cookies
+- [ ] Implement rate limiting
+- [ ] Use environment variables for secrets
+- [ ] Enable CORS only for trusted domains
+- [ ] Regular security updates
+- [ ] Database backups
+- [ ] Log monitoring
+- [ ] Session cleanup tasks
 
 ## 🤝 Contributing
 
@@ -354,10 +656,37 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🎓 Learning Resources
 
+### Flask & Python
 - [Flask Documentation](https://flask.palletsprojects.com/)
-- [RESTful API Design](https://restfulapi.net/)
+- [Flask-SQLAlchemy Guide](https://flask-sqlalchemy.palletsprojects.com/)
 - [Python Testing with unittest](https://docs.python.org/3/library/unittest.html)
+- [PEP 8 Style Guide](https://pep8.org/)
+
+### REST API Design
+- [RESTful API Design](https://restfulapi.net/)
 - [HTTP Status Codes](https://httpstatuses.com/)
+- [API Design Best Practices](https://swagger.io/resources/articles/best-practices-in-api-design/)
+
+### Authentication & Security
+- [bcrypt Password Hashing](https://github.com/pyca/bcrypt/)
+- [OWASP API Security](https://owasp.org/www-project-api-security/)
+- [JWT Tokens](https://jwt.io/introduction/)
+- [Session vs Token Authentication](https://auth0.com/blog/cookies-vs-tokens-definitive-guide/)
+
+### Database & SQLAlchemy
+- [SQLAlchemy Tutorial](https://docs.sqlalchemy.org/en/14/tutorial/)
+- [SQLite Documentation](https://www.sqlite.org/docs.html)
+- [Database Design Principles](https://www.guru99.com/database-design.html)
+
+### Testing & Quality
+- [pytest Documentation](https://docs.pytest.org/)
+- [Test-Driven Development](https://testdriven.io/)
+- [Code Coverage with Coverage.py](https://coverage.readthedocs.io/)
+
+### Deployment & DevOps
+- [Gunicorn Documentation](https://docs.gunicorn.org/)
+- [Docker for Python](https://docs.docker.com/language/python/)
+- [12-Factor App Methodology](https://12factor.net/)
 
 ## 🆘 Troubleshooting
 
@@ -383,6 +712,41 @@ pip install -r requirements.txt
 # Ensure you're in the correct directory and venv is activated
 pwd
 which python
+```
+
+**Database issues:**
+```bash
+# Reset database (development only)
+rm -f dev_app.db app.db
+python -c "from app import app, db; app.app_context().push(); db.create_all()"
+```
+
+**Authentication Issues:**
+
+**Session not working:**
+- Ensure `sessionid` header is included in requests
+- Check if session has expired (24-hour default)
+- Verify session ID format (should be UUID)
+
+**Password hash errors:**
+- Ensure bcrypt is installed: `pip install bcrypt`
+- Check if password meets minimum requirements (6+ characters)
+
+**Registration fails:**
+- Check for duplicate username
+- Validate all required fields are provided
+- Ensure database is writable
+
+**Login redirect not working:**
+- Check `LOGIN_REDIRECT_URL` environment variable
+- Verify URL format is complete (with protocol)
+
+**Database connection errors:**
+```bash
+# Check database file permissions
+ls -la *.db
+# Recreate database if corrupted
+rm -f app.db && python app.py
 ```
 
 ---

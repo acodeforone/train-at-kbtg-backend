@@ -48,6 +48,7 @@ pip-delete-this-directory.txt
 .env.development
 .env.test
 .env.production
+.env.staging
 .envrc
 .venv/
 venv/
@@ -76,6 +77,7 @@ nosetests.xml
 test-results/
 test-reports/
 .testmondata
+junit.xml
 
 # =====================
 # Code Quality Tools
@@ -100,6 +102,9 @@ dmypy.json
 # Pre-commit
 .pre-commit-config.yaml.bak
 
+# Bandit security linting
+.bandit
+
 # ================
 # Flask Specific
 # ================
@@ -108,9 +113,13 @@ instance/
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
 app.log
 logs/
 .flaskenv
+flask_session/
 
 # ==================
 # Development Tools
@@ -254,25 +263,43 @@ app.log
 debug.log
 error.log
 access.log
+gunicorn.log
+celery.log
 
-# Database files
+# Database files (SQLite)
 *.db
 *.sqlite
 *.sqlite3
 data.db
 app.db
+dev_app.db
+test_app.db
+production.db
 
-# SSL certificates
+# Database backups
+*.sql
+*.dump
+database_backup/
+
+# SSL certificates and keys
 *.key
 *.crt
 *.pem
 *.cert
+*.p12
+*.pfx
 
 # API keys and secrets
 secrets/
 .secrets
 api_keys.txt
 credentials.json
+service-account.json
+.service_account.json
+
+# JWT tokens and auth files
+jwt_secret.txt
+auth_tokens/
 
 # ====================
 # CI/CD & Deployment
@@ -288,10 +315,20 @@ credentials.json
 
 # AWS
 .aws/
+.aws-sam/
 
 # Heroku
 .env.production
 .env.staging
+
+# Railway
+railway.json
+
+# Vercel
+.vercel
+
+# Netlify
+.netlify
 
 # ================
 # Monitoring & APM
@@ -308,12 +345,72 @@ newrelic.ini
 # Profiling data
 *.prof
 .prof/
+profile_results/
 
 # Benchmark results
 benchmark_results/
+performance_tests/
 
 # Performance logs
 perf.data*
 
 # Core dumps
 core.*
+
+# Memory dumps
+*.dmp
+
+# ===================
+# Session & Cache
+# ===================
+# Flask session files
+flask_session/
+session_data/
+
+# Redis dumps
+dump.rdb
+
+# Memcached
+*.mc
+
+# Cache files
+.cache/
+cache/
+__cache__/
+
+# ===================
+# Backup & Archive
+# ===================
+# Backup files
+*.backup
+*.bak
+*~
+*.old
+
+# Archive files
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.rar
+
+# ===================
+# Miscellaneous
+# ===================
+# Temporary directories
+temp/
+tmp/
+temporary/
+
+# PID files
+*.pid
+
+# Lock files
+*.lock
+.lock
+
+# Socket files
+*.sock
+
+# FIFO files
+*.fifo

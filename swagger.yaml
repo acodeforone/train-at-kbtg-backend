@@ -1,0 +1,563 @@
+openapi: 3.0.3
+info:
+  title: Train at KBTG Backend API
+  description: |
+    A RESTful API training project built with Python Flask for KBTG AI Workshop.
+    
+    This API provides basic Hello World functionality along with a complete user authentication system including:
+    - User registration with password hashing
+    - User login with session management
+    - Session validation and logout
+    - Health monitoring
+    
+    ## Authentication
+    The API uses session-based authentication with UUID tokens. After successful login, include the `sessionid` header in subsequent requests.
+    
+    ## Security
+    - Passwords are hashed using bcrypt with automatic salt generation
+    - Sessions expire after 24 hours by default
+    - Input validation on all endpoints
+    - SQL injection prevention through SQLAlchemy ORM
+  version: 1.0.0
+  contact:
+    name: KBTG AI Training Workshop
+    email: training@kbtg.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://api.kbtg-training.com
+    description: Production server (example)
+paths:
+  /v1/helloworld:
+    get:
+      tags:
+        - Hello World
+      summary: Get hello world message
+      description: Returns a simple "Hello, world." message in JSON format. Perfect for testing API connectivity.
+      operationId: getHelloWorld
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Hello, world."
+                required:
+                  - message
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X GET http://localhost:5000/v1/helloworld
+        - lang: JavaScript
+          source: |
+            fetch('http://localhost:5000/v1/helloworld')
+              .then(response => response.json())
+              .then(data => console.log(data));
+
+  /health:
+    get:
+      tags:
+        - Health Check
+      summary: Health check endpoint
+      description: Returns the service health status. Used for monitoring and load balancer health checks.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                required:
+                  - status
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X GET http://localhost:5000/health
+
+  /v1/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Create a new user account with the provided information. 
+        Passwords are automatically hashed using bcrypt with salt.
+        Username must be unique across the system.
+      operationId: registerUser
+      requestBody:
+        description: User registration data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  example: "John"
+                  description: User's first name
+                lastname:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                  example: "Doe"
+                  description: User's last name
+                title:
+                  type: string
+                  maxLength: 50
+                  example: "Mr."
+                  description: User's title (optional)
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 80
+                  pattern: '^[a-zA-Z0-9_]+$'
+                  example: "johndoe"
+                  description: Unique username (alphanumeric and underscore only)
+                password:
+                  type: string
+                  minLength: 6
+                  example: "securepassword123"
+                  description: User's password (minimum 6 characters)
+              required:
+                - firstname
+                - lastname
+                - username
+                - password
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  user:
+                    $ref: '#/components/schemas/User'
+                required:
+                  - message
+                  - user
+        '400':
+          description: Bad request - validation failed
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ValidationError'
+                  - $ref: '#/components/schemas/InvalidJSONError'
+        '409':
+          description: Conflict - username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X POST http://localhost:5000/v1/register \
+              -H "Content-Type: application/json" \
+              -d '{
+                "firstname": "John",
+                "lastname": "Doe",
+                "title": "Mr.",
+                "username": "johndoe",
+                "password": "securepassword123"
+              }'
+
+  /v1/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: |
+        Authenticate user with username and password. 
+        Returns user information and session ID in response header.
+        The session ID should be used for subsequent authenticated requests.
+      operationId: loginUser
+      requestBody:
+        description: Login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "johndoe"
+                  description: User's username
+                password:
+                  type: string
+                  example: "securepassword123"
+                  description: User's password
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            sessionid:
+              description: Session UUID for authenticated requests
+              schema:
+                type: string
+                format: uuid
+                example: "550e8400-e29b-41d4-a716-446655440000"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful"
+                  user:
+                    $ref: '#/components/schemas/User'
+                  redirect_url:
+                    type: string
+                    format: uri
+                    example: "http://localhost:3000/dashboard"
+                    description: URL to redirect user after successful login
+                required:
+                  - message
+                  - user
+                  - redirect_url
+        '400':
+          description: Bad request - missing credentials or invalid JSON
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/MissingCredentialsError'
+                  - $ref: '#/components/schemas/InvalidJSONError'
+        '401':
+          description: Unauthorized - invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthenticationError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X POST http://localhost:5000/v1/login \
+              -H "Content-Type: application/json" \
+              -d '{
+                "username": "johndoe",
+                "password": "securepassword123"
+              }' -i
+
+  /v1/validate-session:
+    get:
+      tags:
+        - Authentication
+      summary: Validate current session
+      description: |
+        Validate if the current session is still active and not expired.
+        Returns user information if session is valid.
+      operationId: validateSession
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: Session is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Session is valid"
+                  user:
+                    $ref: '#/components/schemas/User'
+                  session_id:
+                    type: string
+                    format: uuid
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+                required:
+                  - message
+                  - user
+                  - session_id
+        '400':
+          description: Bad request - missing sessionid header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingSessionError'
+        '401':
+          description: Unauthorized - invalid or expired session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidSessionError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X GET http://localhost:5000/v1/validate-session \
+              -H "sessionid: your-session-id-here"
+
+  /v1/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout user
+      description: |
+        Invalidate the current user session, effectively logging them out.
+        The session ID will no longer be valid for subsequent requests.
+      operationId: logoutUser
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout successful"
+                required:
+                  - message
+        '400':
+          description: Bad request - missing sessionid header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingSessionError'
+        '404':
+          description: Not found - session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionNotFoundError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+      x-code-samples:
+        - lang: curl
+          source: |
+            curl -X POST http://localhost:5000/v1/logout \
+              -H "sessionid: your-session-id-here"
+
+components:
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: header
+      name: sessionid
+      description: Session UUID obtained from login endpoint
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+          description: Unique user identifier
+        firstname:
+          type: string
+          example: "John"
+          description: User's first name
+        lastname:
+          type: string
+          example: "Doe"
+          description: User's last name
+        title:
+          type: string
+          nullable: true
+          example: "Mr."
+          description: User's title (optional)
+        username:
+          type: string
+          example: "johndoe"
+          description: User's unique username
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-09-18T07:15:57.031652"
+          description: Account creation timestamp
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-09-18T07:15:57.031659"
+          description: Last update timestamp
+      required:
+        - id
+        - firstname
+        - lastname
+        - username
+        - created_at
+        - updated_at
+
+    ValidationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Validation failed"
+        details:
+          type: array
+          items:
+            type: string
+          example: ["firstname is required", "password must be at least 6 characters"]
+      required:
+        - error
+        - details
+
+    InvalidJSONError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid JSON payload"
+        message:
+          type: string
+          example: "Request must contain JSON data"
+      required:
+        - error
+        - message
+
+    ConflictError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Registration failed"
+        message:
+          type: string
+          example: "Username already exists"
+      required:
+        - error
+        - message
+
+    MissingCredentialsError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Missing credentials"
+        message:
+          type: string
+          example: "Username and password are required"
+      required:
+        - error
+        - message
+
+    AuthenticationError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Authentication failed"
+        message:
+          type: string
+          example: "Invalid username or password"
+      required:
+        - error
+        - message
+
+    MissingSessionError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "No session found"
+        message:
+          type: string
+          example: "sessionid header is required"
+      required:
+        - error
+        - message
+
+    InvalidSessionError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid session"
+        message:
+          type: string
+          example: "Session not found or expired"
+      required:
+        - error
+        - message
+
+    SessionNotFoundError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Invalid session"
+        message:
+          type: string
+          example: "Session not found or already expired"
+      required:
+        - error
+        - message
+
+    InternalServerError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Internal server error"
+        message:
+          type: string
+          example: "An unexpected error occurred"
+      required:
+        - error
+        - message
+
+tags:
+  - name: Hello World
+    description: Basic greeting endpoint for testing connectivity
+  - name: Health Check
+    description: Service health monitoring
+  - name: Authentication
+    description: User authentication and session management
+
+externalDocs:
+  description: Find more info in the project README
+  url: https://github.com/mikelopster/ai-workshop-assignment-sep/blob/main/backend/train-at-kbtg-backend/README.md
