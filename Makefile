@@ -1,4 +1,4 @@
-.PHONY: help install install-dev install-prod test test-cov lint format clean run dev setup
+.PHONY: help install install-dev install-prod test test-cov lint format clean run dev setup test-e2e test-all
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -11,6 +11,8 @@ setup: ## Setup development environment
 	./venv/bin/pip install --upgrade pip
 	./venv/bin/pip install -r requirements.txt
 	./venv/bin/pip install -r requirements-dev.txt
+	npm install
+	npx playwright install
 
 install: ## Install production dependencies
 	pip install -r requirements.txt
@@ -27,6 +29,16 @@ test: ## Run tests
 
 test-cov: ## Run tests with coverage
 	python -m pytest --cov=app --cov-report=term-missing --cov-report=html
+
+test-e2e: ## Run Playwright E2E tests
+	npm test
+
+test-e2e-ui: ## Run Playwright tests with UI
+	npm run test:ui
+
+test-all: ## Run all tests (unit + E2E)
+	python -m pytest --cov=app --cov-report=term-missing
+	npm test
 
 lint: ## Run linting
 	flake8 app.py config.py test_app.py
@@ -49,6 +61,9 @@ clean: ## Clean up build artifacts
 	rm -rf *.egg-info/
 	rm -rf build/
 	rm -rf dist/
+	rm -rf test-results/
+	rm -rf playwright-report/
+	rm -rf node_modules/.cache/
 
 run: ## Run the Flask app
 	python app.py

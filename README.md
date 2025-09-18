@@ -20,6 +20,7 @@
 - [Development](#development)
 - [Technical Details](#technical-details)
 - [Contributing](#contributing)
+- [📚 Additional Documentation](#-additional-documentation)
 
 ## 🎯 Overview
 
@@ -36,6 +37,7 @@ This is a simple Flask-based RESTful API that demonstrates basic REST API concep
 - SQLite database integration with SQLAlchemy
 - Environment-based configuration
 - Unit testing for APIs with database interactions
+- End-to-end API testing with Playwright MCP framework
 - Error handling and status codes
 - Security headers and CORS handling
 
@@ -48,7 +50,7 @@ This is a simple Flask-based RESTful API that demonstrates basic REST API concep
 - 💾 **SQLite Database**: Lightweight database with proper schema
 - 🔒 **Password Security**: Bcrypt password hashing with salt
 - 📚 **API Documentation**: Interactive Swagger UI with OpenAPI 3.0 spec
-- 🧪 **Unit Testing**: Comprehensive test coverage
+- 🧪 **Comprehensive Testing**: Unit tests with pytest and E2E testing with Playwright MCP
 - ⚙️ **Environment Config**: Flexible configuration management
 - 📝 **Documentation**: Well-documented code and API
 - 🐍 **Python Best Practices**: Following PEP 8 and Flask conventions
@@ -58,7 +60,9 @@ This is a simple Flask-based RESTful API that demonstrates basic REST API concep
 Before you begin, ensure you have the following installed:
 
 - **Python 3.7+** - [Download here](https://www.python.org/downloads/)
+- **Node.js 18+** - [Download here](https://nodejs.org/) (required for Playwright E2E testing)
 - **pip** - Python package installer (usually comes with Python)
+- **npm** - Node.js package manager (comes with Node.js)
 - **curl** - For API testing (optional, can use browser or Postman)
 
 ## 🛠️ Installation
@@ -107,7 +111,24 @@ make install-dev  # Development
 make install-prod # Production
 ```
 
-### 4. Run the Application
+### 4. Install Node.js Dependencies (for E2E Testing)
+```bash
+# Install Playwright and testing dependencies
+npm install
+
+# Install Playwright browsers
+npx playwright install
+```
+
+### 5. Set up Environment Configuration
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env file with your configuration (optional for basic usage)
+```
+
+### 6. Run the Application
 ```bash
 python app.py
 ```
@@ -401,9 +422,13 @@ For non-existent endpoints:
 
 ## 🧪 Testing
 
-### Running Tests
+This project includes both unit testing and comprehensive end-to-end API testing using Playwright MCP.
+
+### Python Unit Tests
+
+#### Running Unit Tests
 ```bash
-# Run all tests
+# Run all Python unit tests
 python -m unittest test_app.py
 
 # Run tests with verbose output
@@ -426,6 +451,51 @@ make test      # Basic tests
 make test-cov  # Tests with coverage
 ```
 
+### Playwright MCP End-to-End Testing
+
+#### Quick Start with E2E Testing
+```bash
+# Install dependencies (if not done already)
+npm install
+npx playwright install
+
+# Run all E2E tests
+npm test
+
+# Run specific test suites
+npm run test:smoke      # Critical functionality tests
+npm run test:api        # API endpoint tests  
+npm run test:auth       # Authentication flow tests
+npm run test:integration # User workflow tests
+
+# Run tests with UI for debugging
+npm run test:ui
+```
+
+#### Test Suites Overview
+- **🚨 Smoke Tests** (`@smoke`): Critical functionality validation for production readiness
+- **🔌 API Tests** (`@api`): Comprehensive endpoint testing including error scenarios
+- **🔐 Authentication Tests** (`@auth`): Login, registration, and session management flows
+- **🔄 Integration Tests** (`@integration`): End-to-end user workflows and complex scenarios
+
+#### Advanced Testing Options
+```bash
+# Run tests in headed mode (visible browser)
+npx playwright test --headed
+
+# Run specific test file
+npx playwright test tests/basic.api.spec.ts
+
+# Debug mode with breakpoints
+npx playwright test --debug
+
+# Generate test report
+npx playwright show-report
+
+# Run tests against different environments
+PLAYWRIGHT_BASE_URL=http://staging.example.com npm test
+```
+
 ### Code Quality Tools
 ```bash
 # Format code
@@ -442,12 +512,62 @@ make clean
 ```
 
 ### Test Coverage
-The test suite covers:
+#### Python Unit Test Coverage
 - ✅ Hello World endpoint functionality
 - ✅ Health check endpoint
 - ✅ User registration with validation
 - ✅ User login and authentication
 - ✅ Session management and validation
+
+#### Playwright E2E Test Coverage
+- ✅ **API Functionality**: All REST endpoints with success/error scenarios
+- ✅ **Authentication Flows**: Registration, login, logout, session validation
+- ✅ **User Workflows**: Complete user journeys from registration to API usage
+- ✅ **Error Handling**: Invalid inputs, unauthorized access, server errors
+- ✅ **Production Readiness**: Health checks, performance validation
+- ✅ **Security Testing**: Authentication bypass attempts, input validation
+
+### CI/CD Integration
+
+The project includes automated testing in GitHub Actions:
+```yaml
+# Tests run automatically on:
+- Push to main/develop branches
+- Pull requests
+- Manual workflow dispatch
+
+# Test matrix includes:
+- Python versions: 3.9, 3.10, 3.11
+- Node.js versions: 18, 20
+- Comprehensive test suite execution
+- Test artifacts and reports upload
+```
+
+### Debugging and Troubleshooting
+
+#### For Unit Tests
+```bash
+# Run tests with detailed output
+python -m unittest test_app.py -v
+
+# Debug specific test
+python -c "import test_app; test_app.TestHelloWorldAPI().test_hello_world_endpoint()"
+```
+
+#### For E2E Tests
+```bash
+# Interactive debugging
+npm run test:ui
+
+# Check test results
+ls test-results/
+ls playwright-report/
+
+# View HTML report
+npx playwright show-report
+```
+
+📋 **For detailed E2E testing documentation, see [PLAYWRIGHT.md](PLAYWRIGHT.md)**
 - ✅ User logout functionality
 - ✅ Password hashing and verification
 - ✅ Database operations (CRUD)
@@ -769,6 +889,26 @@ ls -la *.db
 # Recreate database if corrupted
 rm -f app.db && python app.py
 ```
+
+## 📚 Additional Documentation
+
+For comprehensive documentation on specific aspects of this project:
+
+- **[📋 Technical Details & UML Diagrams](DETAILS.md)** - Complete technical documentation including:
+  - Entity Relationship Diagrams
+  - UML Class Diagrams  
+  - Sequence Diagrams
+  - Architecture Overview
+
+- **[🎭 Playwright MCP Testing Guide](PLAYWRIGHT.md)** - Comprehensive E2E testing documentation including:
+  - Testing Framework Setup
+  - Test Suite Organization
+  - CI/CD Integration
+  - Best Practices & Troubleshooting
+
+- **[🔍 Database Schema](DATABASE_SCHEMA.md)** - Detailed database documentation
+- **[🐳 Docker Documentation](Dockerfile)** - Containerization setup
+- **[📊 API Specification](swagger.yaml)** - Complete OpenAPI 3.0 specification
 
 ---
 
